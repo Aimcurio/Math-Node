@@ -15,6 +15,7 @@ Math Node is a deterministic, model-agnostic mathematical runtime with a separat
 - `docs/ARCHITECTURE.md` — runtime/agent separation, communication planes, verified contracts, HITL, and Vision Engine.
 - `docs/ROADMAP.md` — requirement-driven implementation roadmap and exit gates.
 - `docs/AGENTS_AND_SKILLS.md` — agent boundaries, five Agent-Plane skills, communication policy, and promotion rules.
+- `docs/OUTSTANDING_WORK.md` — canonical implementation/verification ledger, status vocabulary, closure criteria, priorities, and safe-to-proceed rules.
 
 ## Core modules
 - `src/NOESIS/MathRuntime.ts` — deterministic execution boundary.
@@ -27,3 +28,5 @@ Math Node is a deterministic, model-agnostic mathematical runtime with a separat
 
 ## Current status
 The repository remains a prototype/integration scaffold. The new contract and Vision Engine modules establish architectural boundaries; they are not claims of production readiness. The next implementation work is Phase 0 in the roadmap: replace trust-critical loose types, wire contract enforcement into Agent Plane handoffs, and add verification/compatibility tests before expanding mathematical capability.
+
+All known incomplete, scaffolded, unverified, planned, or unknown items must be tracked in `docs/OUTSTANDING_WORK.md` until their closure evidence is recorded. That ledger is the authoritative answer to whether a documented architecture claim has actually been implemented and verified.
