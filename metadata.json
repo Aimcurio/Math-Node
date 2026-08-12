@@ -1,0 +1,6 @@
+{
+  "name": "AI Reasoning Flow",
+  "description": "Visualizes the reasoning and skill-building process of an agent.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
