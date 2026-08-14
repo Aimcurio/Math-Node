@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Terminal, Database, Shield, Zap, FileCode, Play, RotateCcw } from 'lucide-react';
 import { MathRuntime } from '../NOESIS/MathRuntime';
 import { CapabilityRegistry } from '../NOESIS/CapabilityRegistry';
+import { ProviderRegistry } from '../NOESIS/ProviderRegistry';
 import { AgentPlaneAdapter } from '../NOESIS/AgentPlane';
 import { OKF } from '../NOESIS/OKF';
 import { MathVerifier } from '../NOESIS/MathVerifier';
@@ -12,11 +13,12 @@ export default function Phase5MathKernel() {
   const runtimeRef = useRef<{ runtime: MathRuntime, verifier: MathVerifier } | null>(null);
 
   const initRuntime = () => {
-    const registry = new CapabilityRegistry();
+    const providers = new ProviderRegistry();
+    const registry = new CapabilityRegistry(providers);
     const okf = new OKF();
-    const agentPlane = new AgentPlaneAdapter(okf, registry);
-    const runtime = new MathRuntime(registry, agentPlane);
-    const verifier = new MathVerifier(registry, okf);
+    const agentPlane = new AgentPlaneAdapter(okf, registry, providers);
+    const runtime = new MathRuntime(registry, providers);
+    const verifier = new MathVerifier(registry, providers, okf);
     runtimeRef.current = { runtime, verifier };
     setLogs(["[System] Phase 5 Math Kernel Initialized."]);
   };

@@ -1,6 +1,7 @@
 import { UnsupportedRequirement, CapabilityDevelopmentResult, CapabilityRecord, VerificationRecord } from "./Types";
 import { OKF } from "./OKF";
 import { CapabilityRegistry } from "./CapabilityRegistry";
+import { ProviderRegistry } from "./ProviderRegistry";
 
 // STATUS: INTEGRATION SCAFFOLD
 // This acts as a temporary adapter connecting to mocked Agents 001-007
@@ -28,7 +29,7 @@ export interface Agent007Orchestrator {
 }
 
 export class AgentPlaneAdapter {
-  constructor(private okf: OKF, private registry: CapabilityRegistry) {}
+  constructor(private okf: OKF, private registry: CapabilityRegistry, private providers: ProviderRegistry) {}
 
   async handleUnsupported(requirement: UnsupportedRequirement): Promise<CapabilityDevelopmentResult> {
     console.log(`\n[Agent Plane] STATUS: INTEGRATION SCAFFOLD`);
@@ -113,10 +114,10 @@ export class AgentPlaneAdapter {
          createdBy: "Agent 003",
          timestamp: new Date().toISOString()
       },
-      createdAt: new Date().toISOString(),
-      evaluate: evaluateFn
+      createdAt: new Date().toISOString()
     };
 
+    this.providers.register(record.implementationRef, evaluateFn);
     this.registry.register(record);
     console.log(`[Agent 007] AVAILABLE: ${requirement.operation} registered with Math Runtime.`);
 

@@ -1,34 +1,17 @@
 import { MathRequest, MathResult, UnsupportedRequirement } from "./Types";
 import { CapabilityRegistry } from "./CapabilityRegistry";
-import { AgentPlaneAdapter } from "./AgentPlane";
-import { parse, normalize, evaluate, simplify } from "./MathEngine";
+import { ProviderRegistry } from "./ProviderRegistry";
+import { CapabilityModule, registerCapabilityModule } from "./CapabilityModule";
+import { createFoundationModule } from "./FoundationModule";
 
 export class MathRuntime {
   constructor(
     private registry: CapabilityRegistry,
-    private agentPlane: AgentPlaneAdapter
+    private providers: ProviderRegistry,
+    modules: CapabilityModule[] = [createFoundationModule()]
   ) {
-    // Seed the runtime with deterministic foundations
-    const foundationalCapabilities = [
-      { id: "expression.parse", fn: (input: string) => JSON.stringify(parse(input)) },
-      { id: "expression.normalize", fn: (input: string) => JSON.stringify(normalize(parse(input))) },
-      { id: "expression.evaluate", fn: (input: string, vars: any) => evaluate(parse(input), vars).toString() },
-      { id: "expression.simplify", fn: (input: string) => JSON.stringify(simplify(parse(input))) }
-    ];
-
-    for (const cap of foundationalCapabilities) {
-      this.registry.register({
-        capabilityId: cap.id,
-        name: cap.id,
-        version: 1,
-        status: "AVAILABLE",
-        dependencies: [],
-        implementationRef: "internal",
-        requirementId: "internal",
-        provenance: { createdBy: "System", timestamp: new Date().toISOString() },
-        createdAt: new Date().toISOString(),
-        evaluate: cap.fn
-      });
+    for (const module of modules) {
+      registerCapabilityModule(module, this.registry, this.providers);
     }
   }
 
@@ -39,22 +22,47 @@ export class MathRuntime {
 
   async execute(request: MathRequest): Promise<MathResult> {
     const startTime = performance.now();
-    console.log(`\n[Math Runtime] Request received: ${request.operation}(${request.args.join(", ")})`);
+    const serializedArgs = serializeArgs(request.args);
+    console.log(`\n[Math Runtime] Request received: ${request.operation}(${serializedArgs})`);
 
     if (this.hasCapability(request.operation)) {
       const record = this.registry.get(request.operation);
-      if (record && record.evaluate) {
-        console.log(`[Math Runtime] Fast-path execution for ${request.operation}`);
-        const res = record.evaluate(...request.args);
-        console.log(`[Math Runtime] Result: ${res}`);
-        return { 
-           result: res, 
-           status: "SUCCESS",
-           executionTimeMs: performance.now() - startTime,
-           route: "FAST PATH",
-           capabilityVersion: record.version,
-           agentPlaneInvoked: false
-        };
+      if (record) {
+        const implementation = this.providers.resolve(record.implementationRef);
+        if (!implementation) {
+          return {
+            result: null,
+            status: "ERROR",
+            message: `Implementation unavailable: ${record.implementationRef}`,
+            executionTimeMs: performance.now() - startTime,
+            route: "FAST PATH",
+            capabilityVersion: record.version,
+            agentPlaneInvoked: false
+          };
+        }
+        try {
+          console.log(`[Math Runtime] Fast-path execution for ${request.operation}`);
+          const res = implementation(...request.args);
+          console.log(`[Math Runtime] Result: ${res}`);
+          return {
+             result: res,
+             status: "SUCCESS",
+             executionTimeMs: performance.now() - startTime,
+             route: "FAST PATH",
+             capabilityVersion: record.version,
+             agentPlaneInvoked: false
+          };
+        } catch (err: any) {
+          return {
+            result: null,
+            status: "ERROR",
+            message: err?.message ?? "Capability implementation failed.",
+            executionTimeMs: performance.now() - startTime,
+            route: "FAST PATH",
+            capabilityVersion: record.version,
+            agentPlaneInvoked: false
+          };
+        }
       }
     }
 
@@ -62,7 +70,7 @@ export class MathRuntime {
     const req: UnsupportedRequirement = {
       requirementId: `req_${Date.now()}`,
       operation: request.operation,
-      rawInput: request.args.join(", "),
+      rawInput: serializedArgs,
       requiredCapabilities: [request.operation]
     };
 
@@ -80,3 +88,10 @@ export class MathRuntime {
   }
 }
 
+function serializeArgs(args: any[]): string {
+  return JSON.stringify(args, (_key, value) => {
+    if (typeof value === "function") return "[Function]";
+    if (typeof value === "bigint") return value.toString();
+    return value;
+  });
+}

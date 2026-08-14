@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MathRuntime } from '../NOESIS/MathRuntime';
 import { CapabilityRegistry } from '../NOESIS/CapabilityRegistry';
+import { ProviderRegistry } from '../NOESIS/ProviderRegistry';
 import { OKF } from '../NOESIS/OKF';
 import { AgentPlaneAdapter } from '../NOESIS/AgentPlane';
 import { Play, RotateCcw, Activity } from 'lucide-react';
@@ -13,10 +14,11 @@ export default function MathNodeDemo() {
   const runtimeRef = useRef<MathRuntime | null>(null);
 
   const initRuntime = () => {
-    const registry = new CapabilityRegistry();
+    const providers = new ProviderRegistry();
+    const registry = new CapabilityRegistry(providers);
     const okf = new OKF();
-    const agentPlane = new AgentPlaneAdapter(okf, registry);
-    runtimeRef.current = new MathRuntime(registry, agentPlane);
+    const agentPlane = new AgentPlaneAdapter(okf, registry, providers);
+    runtimeRef.current = new MathRuntime(registry, providers);
     setLogs(["[System] Math Node Initialized. Deterministic foundations seeded."]);
     setLatestResult(null);
   };

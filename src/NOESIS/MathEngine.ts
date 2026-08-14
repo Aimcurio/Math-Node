@@ -29,6 +29,8 @@ export function parse(input: string): Expr {
       } else if (s[pos] === '/') {
         pos++;
         node = { type: 'Divide', left: node, right: parseFactor() };
+      } else if (startsPrimary(s[pos])) {
+        node = { type: 'Multiply', left: node, right: parseFactor() };
       } else {
         break;
       }
@@ -37,6 +39,15 @@ export function parse(input: string): Expr {
   }
 
   function parseFactor(): Expr {
+    if (s[pos] === '-') {
+      pos++;
+      return { type: 'Negate', value: parseFactor() };
+    }
+    if (s[pos] === '+') {
+      pos++;
+      return parseFactor();
+    }
+
     let node = parsePrimary();
     if (pos < s.length && s[pos] === '^') {
       pos++;
@@ -60,6 +71,9 @@ export function parse(input: string): Expr {
       while (pos < s.length && /[a-zA-Z]/.test(s[pos])) {
         name += s[pos++];
       }
+      if (name.length > 1 && s[pos] === '(') {
+        throw new Error(`Function calls are not supported: ${name}`);
+      }
       return { type: 'Variable', name };
     }
     if (/[0-9]/.test(c) || c === '.') {
@@ -72,6 +86,10 @@ export function parse(input: string): Expr {
     throw new Error(`Unexpected character: ${c}`);
   }
 
+  function startsPrimary(c: string | undefined): boolean {
+    return c === '(' || c === '.' || !!c && /[a-zA-Z0-9]/.test(c);
+  }
+
   const result = parseExpr();
   if (pos < s.length) throw new Error(`Unexpected character at end: ${s[pos]}`);
   return result;
@@ -81,24 +99,34 @@ export function format(expr: Expr): string {
   switch (expr.type) {
     case 'Number': return expr.value.toString();
     case 'Variable': return expr.name;
+    case 'Negate': {
+      const inner = expr.value.type === 'Number' || expr.value.type === 'Variable' || expr.value.type === 'Power'
+        ? format(expr.value)
+        : `(${format(expr.value)})`;
+      return `-${inner}`;
+    }
     case 'Add': return `${format(expr.left)} + ${format(expr.right)}`;
     case 'Subtract': return `${format(expr.left)} - ${format(expr.right)}`;
     case 'Multiply': {
-      const leftStr = expr.left.type === 'Add' || expr.left.type === 'Subtract' ? `(${format(expr.left)})` : format(expr.left);
-      const rightStr = expr.right.type === 'Add' || expr.right.type === 'Subtract' ? `(${format(expr.right)})` : format(expr.right);
+      const leftStr = needsTermParens(expr.left) ? `(${format(expr.left)})` : format(expr.left);
+      const rightStr = needsTermParens(expr.right) ? `(${format(expr.right)})` : format(expr.right);
       return `${leftStr}*${rightStr}`;
     }
     case 'Divide': {
-      const leftStr = expr.left.type === 'Add' || expr.left.type === 'Subtract' ? `(${format(expr.left)})` : format(expr.left);
-      const rightStr = expr.right.type === 'Add' || expr.right.type === 'Subtract' ? `(${format(expr.right)})` : format(expr.right);
+      const leftStr = needsTermParens(expr.left) ? `(${format(expr.left)})` : format(expr.left);
+      const rightStr = needsTermParens(expr.right) ? `(${format(expr.right)})` : format(expr.right);
       return `${leftStr}/${rightStr}`;
     }
     case 'Power': {
       const leftStr = expr.base.type === 'Number' || expr.base.type === 'Variable' ? format(expr.base) : `(${format(expr.base)})`;
-      const rightStr = expr.exponent.type === 'Number' || expr.exponent.type === 'Variable' ? format(expr.exponent) : `(${format(expr.exponent)})`;
+      const rightStr = expr.exponent.type === 'Number' || expr.exponent.type === 'Variable' || expr.exponent.type === 'Negate' ? format(expr.exponent) : `(${format(expr.exponent)})`;
       return `${leftStr}^${rightStr}`;
     }
   }
+}
+
+function needsTermParens(expr: Expr): boolean {
+  return expr.type === 'Add' || expr.type === 'Subtract';
 }
 
 export function evaluate(expr: Expr, vars: Record<string, number> = {}): number {
@@ -107,6 +135,7 @@ export function evaluate(expr: Expr, vars: Record<string, number> = {}): number 
     case 'Variable':
       if (vars[expr.name] === undefined) throw new Error(`Undefined variable: ${expr.name}`);
       return vars[expr.name];
+    case 'Negate': return -evaluate(expr.value, vars);
     case 'Add': return evaluate(expr.left, vars) + evaluate(expr.right, vars);
     case 'Subtract': return evaluate(expr.left, vars) - evaluate(expr.right, vars);
     case 'Multiply': return evaluate(expr.left, vars) * evaluate(expr.right, vars);
@@ -119,20 +148,74 @@ export function normalize(expr: Expr): Expr {
   return simplify(expr);
 }
 
+export function canonicalize(expr: Expr): Expr {
+  const simplified = simplify(expr);
+
+  switch (simplified.type) {
+    case 'Number':
+    case 'Variable':
+      return simplified;
+    case 'Negate':
+      return { type: 'Negate', value: canonicalize(simplified.value) };
+    case 'Add':
+      return buildAssociative('Add', collectAssociative('Add', simplified).map(canonicalize));
+    case 'Multiply':
+      return buildAssociative('Multiply', collectAssociative('Multiply', simplified).map(canonicalize));
+    case 'Subtract':
+      return { type: 'Subtract', left: canonicalize(simplified.left), right: canonicalize(simplified.right) };
+    case 'Divide':
+      return { type: 'Divide', left: canonicalize(simplified.left), right: canonicalize(simplified.right) };
+    case 'Power':
+      return { type: 'Power', base: canonicalize(simplified.base), exponent: canonicalize(simplified.exponent) };
+  }
+}
+
+export function canonicalKey(expr: Expr): string {
+  return JSON.stringify(canonicalize(expr));
+}
+
+function collectAssociative(type: 'Add' | 'Multiply', expr: Expr): Expr[] {
+  if (expr.type !== type) return [expr];
+  return [
+    ...collectAssociative(type, expr.left),
+    ...collectAssociative(type, expr.right)
+  ];
+}
+
+function buildAssociative(type: 'Add' | 'Multiply', terms: Expr[]): Expr {
+  const sorted = terms.sort((left, right) => canonicalSortKey(left).localeCompare(canonicalSortKey(right)));
+  return sorted.slice(1).reduce<Expr>(
+    (left, right) => ({ type, left, right }),
+    sorted[0]
+  );
+}
+
+function canonicalSortKey(expr: Expr): string {
+  return JSON.stringify(expr);
+}
+
 export function simplify(expr: Expr): Expr {
   switch (expr.type) {
     case 'Number':
     case 'Variable':
       return expr;
+    case 'Negate': {
+      const value = simplify(expr.value);
+      if (value.type === 'Number') return { type: 'Number', value: -value.value };
+      if (value.type === 'Negate') return value.value;
+      if (value.type === 'Multiply' && value.left.type === 'Number') {
+        return simplify({ type: 'Multiply', left: { type: 'Number', value: -value.left.value }, right: value.right });
+      }
+      return { type: 'Negate', value };
+    }
     case 'Add': {
       const left = simplify(expr.left);
       const right = simplify(expr.right);
       if (left.type === 'Number' && left.value === 0) return right;
       if (right.type === 'Number' && right.value === 0) return left;
       if (left.type === 'Number' && right.type === 'Number') return { type: 'Number', value: left.value + right.value };
-      
-      // simplify x + x = 2*x
-      // simplify c*x + d*x = (c+d)*x (maybe overkill for now, but let's do a basic check)
+      if (left.type === 'Negate') return simplify({ type: 'Subtract', left: right, right: left.value });
+      if (right.type === 'Negate') return simplify({ type: 'Subtract', left, right: right.value });
       
       return { type: 'Add', left, right };
     }
@@ -141,6 +224,7 @@ export function simplify(expr: Expr): Expr {
       const right = simplify(expr.right);
       if (right.type === 'Number' && right.value === 0) return left;
       if (left.type === 'Number' && right.type === 'Number') return { type: 'Number', value: left.value - right.value };
+      if (canonicalKey(left) === canonicalKey(right)) return { type: 'Number', value: 0 };
       return { type: 'Subtract', left, right };
     }
     case 'Multiply': {
@@ -150,6 +234,8 @@ export function simplify(expr: Expr): Expr {
       if (right.type === 'Number' && right.value === 0) return { type: 'Number', value: 0 };
       if (left.type === 'Number' && left.value === 1) return right;
       if (right.type === 'Number' && right.value === 1) return left;
+      if (left.type === 'Number' && left.value === -1) return simplify({ type: 'Negate', value: right });
+      if (right.type === 'Number' && right.value === -1) return simplify({ type: 'Negate', value: left });
       if (left.type === 'Number' && right.type === 'Number') return { type: 'Number', value: left.value * right.value };
       
       // c * (d * x) -> (c*d) * x
@@ -190,6 +276,7 @@ export function differentiate(expr: Expr, variable: string = 'x'): Expr {
   switch (expr.type) {
     case 'Number': return { type: 'Number', value: 0 };
     case 'Variable': return { type: 'Number', value: expr.name === variable ? 1 : 0 };
+    case 'Negate': return { type: 'Negate', value: differentiate(expr.value, variable) };
     case 'Add': return { type: 'Add', left: differentiate(expr.left, variable), right: differentiate(expr.right, variable) };
     case 'Subtract': return { type: 'Subtract', left: differentiate(expr.left, variable), right: differentiate(expr.right, variable) };
     case 'Multiply':

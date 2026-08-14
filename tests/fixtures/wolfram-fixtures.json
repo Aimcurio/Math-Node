@@ -1,0 +1,128 @@
+[
+  {
+    "schemaVersion": 1,
+    "operation": "differentiate",
+    "input": { "expression": "x^2", "variable": "x" },
+    "status": "VERIFIED",
+    "expectedExpr": {
+      "type": "Multiply",
+      "left": { "type": "Number", "value": 2 },
+      "right": { "type": "Variable", "name": "x" }
+    },
+    "provider": "wolfram",
+    "providerVersion": "offline-contract-v1",
+    "requestDigest": "d7e5379bf5401905bd92c2cab25b87fb02995ba8a8e4d71141957a920fa18d72",
+    "generatedAt": "2026-08-13T00:00:00.000Z",
+    "notes": "Starter fixture with deterministic request digest."
+  },
+  {
+    "schemaVersion": 1,
+    "operation": "simplify",
+    "input": { "expression": "x + 0" },
+    "status": "VERIFIED",
+    "expectedExpr": { "type": "Variable", "name": "x" },
+    "provider": "wolfram",
+    "providerVersion": "offline-contract-v1",
+    "requestDigest": "ac51911520c5688b488efd9cc7c7ef58c52a0a7af41c547e54e72bb88d03e0ad",
+    "generatedAt": "2026-08-13T00:00:00.000Z",
+    "notes": "Starter fixture; simple identity representable by current Expr grammar."
+  },
+  {
+    "schemaVersion": 1,
+    "operation": "numericEvaluate",
+    "input": { "expression": "x^2 + 2", "vars": { "x": 3 } },
+    "status": "VERIFIED",
+    "expectedNumeric": 11,
+    "provider": "wolfram",
+    "providerVersion": "offline-contract-v1",
+    "requestDigest": "bbd263bee0ddb7d07d8de088123fdaec9bbec2859a346b1d35933fcbecdc9afc",
+    "generatedAt": "2026-08-13T00:00:00.000Z",
+    "notes": "Starter numeric fixture."
+  },
+  {
+    "schemaVersion": 1,
+    "operation": "simplify",
+    "input": { "expression": "-x" },
+    "status": "VERIFIED",
+    "expectedExpr": {
+      "type": "Negate",
+      "value": { "type": "Variable", "name": "x" }
+    },
+    "provider": "wolfram",
+    "providerVersion": "offline-contract-v1",
+    "requestDigest": "765178b6639f70a033fabd3cbb50f6dfa926afd48555d556abe69973dfdcc5fd",
+    "generatedAt": "2026-08-13T00:00:00.000Z",
+    "notes": "Unary minus fixture."
+  },
+  {
+    "schemaVersion": 1,
+    "operation": "simplify",
+    "input": { "expression": "2x" },
+    "status": "VERIFIED",
+    "expectedExpr": {
+      "type": "Multiply",
+      "left": { "type": "Number", "value": 2 },
+      "right": { "type": "Variable", "name": "x" }
+    },
+    "provider": "wolfram",
+    "providerVersion": "offline-contract-v1",
+    "requestDigest": "7bcd286e8703735610f123d26b4eb5491811312a4fcc133699721a598887c899",
+    "generatedAt": "2026-08-13T00:00:00.000Z",
+    "notes": "Implicit multiplication fixture."
+  },
+  {
+    "schemaVersion": 1,
+    "operation": "simplify",
+    "input": { "expression": "(x+1)(x-1)" },
+    "status": "VERIFIED",
+    "expectedExpr": {
+      "type": "Multiply",
+      "left": {
+        "type": "Add",
+        "left": { "type": "Variable", "name": "x" },
+        "right": { "type": "Number", "value": 1 }
+      },
+      "right": {
+        "type": "Subtract",
+        "left": { "type": "Variable", "name": "x" },
+        "right": { "type": "Number", "value": 1 }
+      }
+    },
+    "provider": "wolfram",
+    "providerVersion": "offline-contract-v1",
+    "requestDigest": "16c47f8d40ed4ca379091d33d07880edda5692e12c466bab6ba5a3ea4b06173d",
+    "generatedAt": "2026-08-13T00:00:00.000Z",
+    "notes": "Implicit multiplication between parenthesized expressions."
+  },
+  {
+    "schemaVersion": 1,
+    "operation": "differentiate",
+    "input": { "expression": "-x^2", "variable": "x" },
+    "status": "VERIFIED",
+    "expectedExpr": {
+      "type": "Negate",
+      "value": {
+        "type": "Multiply",
+        "left": { "type": "Number", "value": 2 },
+        "right": { "type": "Variable", "name": "x" }
+      }
+    },
+    "provider": "wolfram",
+    "providerVersion": "offline-contract-v1",
+    "requestDigest": "45b53e7cd4af745263b2bbde09086d0646cde00451a9804f6eb6f675f4f38a05",
+    "generatedAt": "2026-08-13T00:00:00.000Z",
+    "notes": "Unary minus with exponent precedence."
+  },
+  {
+    "schemaVersion": 1,
+    "operation": "simplify",
+    "input": { "expression": "x" },
+    "status": "UNSUPPORTED_RESULT",
+    "providerResultText": "sin(x)",
+    "provider": "wolfram",
+    "providerVersion": "offline-contract-v1",
+    "requestDigest": "506303418f443a204dec79e0c3446846239cfab3bcb53142584059f0855f18b9",
+    "generatedAt": "2026-08-13T00:00:00.000Z",
+    "notes": "Input is representable, but the provider result contains a function outside the current Expr grammar."
+  }
+]

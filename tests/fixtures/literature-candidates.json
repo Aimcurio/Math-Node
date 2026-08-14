@@ -1,0 +1,38 @@
+[
+  {
+    "schemaVersion": 1,
+    "source": "manual",
+    "sourcePlugin": "none",
+    "expression": "x^2 + 3*x + 1",
+    "operationCandidates": ["differentiate", "simplify", "numericEvaluate"],
+    "status": "CANDIDATE",
+    "notes": "Seed candidate for the literature staging queue. It is not trusted until promoted through Wolfram fixture validation."
+  },
+  {
+    "schemaVersion": 1,
+    "source": "manual-reviewed algebra edge-case set",
+    "sourcePlugin": "none",
+    "expression": "x^3 - 4*x + 7",
+    "operationCandidates": ["differentiate", "simplify", "numericEvaluate"],
+    "status": "CANDIDATE",
+    "notes": "Polynomial degree and mixed-sign candidate. Parser-representable; not a trusted evaluation until offline Wolfram validation."
+  },
+  {
+    "schemaVersion": 1,
+    "source": "manual-reviewed algebra edge-case set",
+    "sourcePlugin": "none",
+    "expression": "(x+2)*(x-2)",
+    "operationCandidates": ["differentiate", "simplify", "numericEvaluate"],
+    "status": "CANDIDATE",
+    "notes": "Parenthesized implicit-multiplication candidate. Parser-representable; not a trusted evaluation until offline Wolfram validation."
+  },
+  {
+    "schemaVersion": 1,
+    "source": "manual-reviewed algebra edge-case set",
+    "sourcePlugin": "none",
+    "expression": "-(x^3)",
+    "operationCandidates": ["differentiate", "simplify"],
+    "status": "CANDIDATE",
+    "notes": "Unary-negation and exponent-precedence candidate. Parser-representable; not a trusted evaluation until offline Wolfram validation."
+  }
+]

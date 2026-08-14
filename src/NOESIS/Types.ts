@@ -16,7 +16,8 @@ export type Expr =
   | { type: 'Subtract'; left: Expr; right: Expr }
   | { type: 'Multiply'; left: Expr; right: Expr }
   | { type: 'Divide'; left: Expr; right: Expr }
-  | { type: 'Power'; base: Expr; exponent: Expr };
+  | { type: 'Power'; base: Expr; exponent: Expr }
+  | { type: 'Negate'; value: Expr };
 
 export interface MathRequest {
   operation: string;
@@ -51,7 +52,6 @@ export interface CapabilityRecord {
   provenance: ProvenanceRecord;
   createdAt: string;
   parentRevisionId?: string;
-  evaluate?: (...args: any[]) => any;
 }
 
 export interface UnsupportedRequirement {
@@ -118,4 +118,30 @@ export interface VerificationRecord {
     passed: boolean;
   }[];
   passed: boolean;
+}
+
+export type WolframFixtureOperation = "differentiate" | "simplify" | "numericEvaluate";
+
+export type WolframFixtureStatus =
+  | "VERIFIED"
+  | "UNSUPPORTED_RESULT"
+  | "PROVIDER_ERROR";
+
+export interface WolframFixtureRecord {
+  schemaVersion: 1;
+  operation: WolframFixtureOperation;
+  input: {
+    expression: string;
+    variable?: string;
+    vars?: Record<string, number>;
+  };
+  status: WolframFixtureStatus;
+  expectedExpr?: Expr;
+  expectedNumeric?: number;
+  providerResultText?: string;
+  provider: "wolfram";
+  providerVersion?: string;
+  requestDigest: string;
+  generatedAt: string;
+  notes?: string;
 }

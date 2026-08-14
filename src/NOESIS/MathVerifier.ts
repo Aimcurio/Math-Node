@@ -1,10 +1,14 @@
 import { OKF } from "./Types";
 import { CapabilityRegistry } from "./CapabilityRegistry";
-import { parse, simplify, differentiate, format } from "./MathEngine";
+import { ProviderRegistry } from "./ProviderRegistry";
+import { parse, simplify, differentiate, format, canonicalKey } from "./MathEngine";
+import { createCalculusDifferentiationModule } from "./CalculusDifferentiationModule";
+import { registerCapabilityModule } from "./CapabilityModule";
 
 export class MathVerifier {
   constructor(
     private registry: CapabilityRegistry,
+    private providers: ProviderRegistry,
     private okf: OKF
   ) {}
 
@@ -29,11 +33,7 @@ export class MathVerifier {
         const simplified = simplify(diff);
         const actual = format(simplified);
         
-        // Very basic string comparison for equality, normally we'd do AST equivalence
-        const cleanActual = actual.replace(/\s+/g, '');
-        const cleanExpected = test.expected.replace(/\s+/g, '');
-        
-        const testPassed = cleanActual === cleanExpected;
+        const testPassed = canonicalKey(simplified) === canonicalKey(simplify(parse(test.expected)));
         if (!testPassed) passed = false;
 
         results.push({
@@ -64,27 +64,23 @@ export class MathVerifier {
     await this.okf.registerVerification(verificationRecord);
 
     if (passed) {
-      const capability = {
-        capabilityId: "calculus.differentiation",
-        name: "calculus.differentiation",
-        version: 1,
-        status: "AVAILABLE" as any,
-        dependencies: ["expression.parse", "expression.simplify"],
-        implementationRef: "MathEngine.differentiate",
+      const [capability] = registerCapabilityModule(
+        createCalculusDifferentiationModule(verificationRecord),
+        this.registry,
+        this.providers
+      );
+      const verifiedCapability = {
+        ...capability,
         requirementId: "req_demo_diff",
         verificationId: verificationRecord.id,
-        provenance: { createdBy: "Agent 006", timestamp: new Date().toISOString() },
-        createdAt: new Date().toISOString(),
-        evaluate: (exprStr: string) => {
-          const ast = parse(exprStr);
-          const diff = differentiate(ast, 'x');
-          const simp = simplify(diff);
-          return format(simp);
+        provenance: {
+          ...capability.provenance,
+          createdBy: "Agent 006",
+          verificationId: verificationRecord.id
         }
       };
 
-      await this.okf.registerCapability(capability);
-      this.registry.register(capability);
+      await this.okf.registerCapability(verifiedCapability);
     }
 
     return verificationRecord;

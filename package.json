@@ -8,7 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:core": "tsx tests/math-core.test.ts",
+    "test:fixtures": "tsx tests/validate-wolfram-fixtures.test.ts",
+    "test:candidates": "tsx tests/validate-literature-candidates.test.ts",
+    "test:boundary": "tsx tests/fixture-boundary.test.ts",
+    "test:all": "tsx tests/run-all.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
