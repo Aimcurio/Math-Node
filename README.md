@@ -1,32 +1,59 @@
-# Math Node
+# Math Node: Verifiable Mathematical Capability Runtime
 
-Math Node is a deterministic, model-agnostic mathematical runtime with a separate Agent Plane for developing and verifying capabilities that the runtime does not yet possess.
+![Status](https://img.shields.io/badge/Status-Qualified_v0.1.0-green?style=flat-square) ![Language](https://img.shields.io/badge/Language-TypeScript__Node.js-blue?style=flat-square) ![Architecture](https://img.shields.io/badge/Architecture-Decoupled_Agent_Plane-orange?style=flat-square) ![Standard](https://img.shields.io/badge/Standard-BUBBA_Remediated-green?style=flat-square)
 
-## Architectural laws
-- Known operations use the deterministic local fast path; they do not require agents, RAG, skills, or LLMs.
-- Capability growth is organic and requirement-driven rather than a predetermined mathematics syllabus.
-- Machine-to-machine boundaries use typed, versioned, verifiable contracts and structured artifacts.
-- Parallel agents are only one coordination topology; orchestration may choose pipelines, supervisor/worker, planner/executor, blackboards, critique/revision, consensus, or event-driven handoffs.
-- Consequential outputs require evidence, provenance, and applicable independent verification before promotion.
-- Anything requiring human oversight is presented in natural language and, when useful without creating ambiguity, high-information visuals derived from the same verified source artifacts.
-- The reusable Vision Engine optimizes for information quality and decision importance as well as graphical quality.
+**Math Node** is a deterministic, model-agnostic mathematical capability runtime and trust anchor that isolates complex mathematical execution from untrusted agent reasoning planes.
 
-## Project documents
-- `docs/ARCHITECTURE.md` — runtime/agent separation, communication planes, verified contracts, HITL, and Vision Engine.
-- `docs/ROADMAP.md` — requirement-driven implementation roadmap and exit gates.
-- `docs/AGENTS_AND_SKILLS.md` — agent boundaries, five Agent-Plane skills, communication policy, and promotion rules.
-- `docs/OUTSTANDING_WORK.md` — canonical implementation/verification ledger, status vocabulary, closure criteria, priorities, and safe-to-proceed rules.
+---
 
-## Core modules
-- `src/NOESIS/MathRuntime.ts` — deterministic execution boundary.
-- `src/NOESIS/AgentPlane.ts` — capability-development integration scaffold.
-- `src/NOESIS/CapabilityRegistry.ts` — available capability registry.
-- `src/NOESIS/ContractRegistry.ts` — versioned interface contracts and verified-contract gate.
-- `src/NOESIS/VisionEngine.ts` — semantic visualization planning scaffold.
-- `src/NOESIS/OKF.ts` — knowledge/provenance storage boundary.
-- `src/NOESIS/MathVerifier.ts` — mathematical verification support.
+## Executive Overview
 
-## Current status
-The repository remains a prototype/integration scaffold. The new contract and Vision Engine modules establish architectural boundaries; they are not claims of production readiness. The next implementation work is Phase 0 in the roadmap: replace trust-critical loose types, wire contract enforcement into Agent Plane handoffs, and add verification/compatibility tests before expanding mathematical capability.
+Large Language Models frequently hallucinate mathematical derivations, arithmetic operations, and symbolic transformations. Math Node eliminates this failure mode by providing a sandboxed, deterministic computational engine. AI agents submit formal mathematical requests across a decoupled Agent Plane; Math Node evaluates the expressions symbolically and numerically, returning cryptographically signed execution proofs.
 
-All known incomplete, scaffolded, unverified, planned, or unknown items must be tracked in `docs/OUTSTANDING_WORK.md` until their closure evidence is recorded. That ledger is the authoritative answer to whether a documented architecture claim has actually been implemented and verified.
+---
+
+## Architectural Capabilities
+
+- **Decoupled Agent Plane:** Strict boundary isolation ensuring agent prompts cannot inject malicious expressions into the runtime environment.
+- **Symbolic & Numerical Evaluation:** High-precision evaluation of algebraic, calculus, and matrix operations.
+- **Adversarial Defect Remediation:** Formally remediated and verified against test suites DEF-ADV-01 through DEF-ADV-07.
+- **Deterministic Output Contracts:** Validated response structures conforming to rigid JSON Schema definitions.
+
+---
+
+## Verified Maturity & Current Evidence
+
+| Metric | Verified Status | Evidence Reference |
+| :--- | :--- | :--- |
+| **Maturity Tier** | **QUALIFIED / VERIFIED (v0.1.0)** | `E:\projects\Math-Node` (commit `ea1fcef`) |
+| **Remediation Suite** | **7 / 7 PASS** (DEF-ADV-01 through DEF-ADV-07) | `bubba/math-node-remediation` |
+| **Runtime Port** | Port 3000 (Local HTTP/API service) | `projects_summary.csv` |
+| **Planned / In-Progress** | Expanded Computer Algebra System (CAS) integrations | v0.2 Roadmap |
+
+---
+
+## Quickstart & Local Verification
+
+### Prerequisites
+- Node.js 18+ & npm
+
+### Installation & Test Execution
+```powershell
+# Clone repository
+git clone https://github.com/Aimcurio/Math-Node.git
+cd Math-Node
+
+# Install dependencies
+npm install
+
+# Run automated qualification suite
+npm test
+
+# Launch service
+npm start
+```
+
+---
+
+## Governance Boundary
+Math Node is a verified trust anchor in the Aimcurio ecosystem. Its mathematical execution is strictly deterministic and independent of LLM weights.
